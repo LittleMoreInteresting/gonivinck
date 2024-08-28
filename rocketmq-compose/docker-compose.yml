@@ -1,0 +1,70 @@
+version: '3.5'
+# 网络配置
+networks:
+  backend:
+    driver: ${NETWORKS_DRIVER}
+# 服务容器配置
+services:
+  rmqnamesrv:
+    build:
+      context: ../rocketmq
+    ports:
+      - 9876:9876
+    networks:
+      - backend
+    volumes:
+      - ${DATA_PATH_HOST}/rocketmq/logs:/home/rocketmq/logs/
+      - ${DATA_PATH_HOST}/rocketmq/broker/conf/broker.conf:/home/rocketmq/rocketmq-5.3.0/conf/broker.conf
+    restart: always
+    command: sh mqnamesrv
+    environment:
+      - TZ=${TZ}
+
+  rmqbroker:
+    build:
+      context: ../rocketmq
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    volumes:
+      - ${DATA_PATH_HOST}/rocketmq/broker/logs:/home/rocketmq/logs/rocketmqlogs
+      - ${DATA_PATH_HOST}/rocketmq/broker/store:/home/rocketmq/store
+      - ${DATA_PATH_HOST}/rocketmq/broker/conf/broker.conf:/home/rocketmq/rocketmq-5.3.0/conf/broker.conf
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+      - TZ=${TZ}
+    depends_on:
+      - rmqnamesrv
+    networks:
+      - backend
+    restart: always
+    command: sh mqbroker
+
+  rmqproxy:
+    build:
+      context: ../rocketmq
+    networks:
+      - backend
+    depends_on:
+      - rmqbroker
+      - rmqnamesrv
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: on-failure
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+      - TZ=${TZ}
+    command: sh mqproxy
+
+  # mqconsole:
+  #   image: apacherocketmq/rocketmq-dashboard
+  #   container_name: mqdashboard
+  #   ports:
+  #     - 18080:8080
+  #   environment:
+  #     - JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
+  #     - TZ=${TZ}
+  #   networks:
+  #     - backend
