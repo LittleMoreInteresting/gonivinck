@@ -39,7 +39,7 @@ services:
     networks:
       - backend
     restart: always
-    command: sh mqbroker -c /home/rocketmq/rocketmq-5.3.0/conf/broker.conf
+    command: sh mqbroker
   rmqproxy:
     build:
       context: ../rocketmq
