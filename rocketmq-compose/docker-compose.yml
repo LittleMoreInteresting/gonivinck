@@ -39,8 +39,7 @@ services:
     networks:
       - backend
     restart: always
-    command: sh mqbroker
-
+    command: sh mqbroker -c /home/rocketmq/rocketmq-5.3.0/conf/broker.conf
   rmqproxy:
     build:
       context: ../rocketmq
@@ -57,14 +56,13 @@ services:
       - NAMESRV_ADDR=rmqnamesrv:9876
       - TZ=${TZ}
     command: sh mqproxy
-
-  # mqconsole:
-  #   image: apacherocketmq/rocketmq-dashboard
-  #   container_name: mqdashboard
-  #   ports:
-  #     - 18080:8080
-  #   environment:
-  #     - JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
-  #     - TZ=${TZ}
-  #   networks:
-  #     - backend
+  mqconsole:
+    image: apacherocketmq/rocketmq-dashboard
+    container_name: mqdashboard
+    ports:
+      - 18080:8080
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
+      - TZ=${TZ}
+    networks:
+      - backend
